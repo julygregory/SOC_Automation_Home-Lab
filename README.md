@@ -1,7 +1,7 @@
 # Automated SOC Incident Response Pipeline - Home Lab Documentation
 
 **Stack:** Wazuh (SIEM) • Shuffle (SOAR) • TheHive (Case Management) • Sysmon • VirusTotal  
-**Infrastructure:** Oracle VirtualBox • Ubuntu 22.04 LTS (x2) • Windows 10 Pro • Bridged Network (Home Router)
+**Infrastructure:** Oracle VirtualBox • Ubuntu 24.04 LTS (x2) • Windows 10 Enterprise LTSC • Bridged Network (Home Router)
 
 ---
 
