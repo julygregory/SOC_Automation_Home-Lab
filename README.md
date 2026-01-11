@@ -583,9 +583,11 @@ In your Shuffle workflow, add a **Wazuh** node configured as:
 
 ---
 
-#### Node 7: [HTTP] Create Case in TheHive
+#### Node 7: [HTTP] Create Case in TheHive (Critical Severity Only)
 
-**Purpose**: Create or update case in TheHive for tracking and investigation via API
+**Purpose**: Create incident case in TheHive for critical severity threats requiring post-response investigation
+
+**Trigger**: Only executes when severity is **Critical**
 
 **Shuffle Configuration**:
 
@@ -604,48 +606,58 @@ In your Shuffle workflow, add a **Wazuh** node configured as:
 
    ```json
    {
-     "title": "Suspicious Process: $process_name on $hostname",
-     "description": "Process: $process_name\nHash: $sha256_hash\nCommand: $command_line\nVirusTotal Score: $vt_detection_count/70",
-     "severity": 2,
+     "title": "INCIDENT: $hostname - $process_name Detected and Terminated",
+     "description": "Process: $process_name\nHash: $sha256_hash\nCommand: $command_line\nVirusTotal Score: $vt_detection_count/70\n\nAutomated Response: Process terminated via Wazuh Active Response\nStatus: Ready for post-incident investigation and forensics",
+     "severity": 3,
      "tlp": 2,
-     "tags": ["mimikatz", "credential-dumping", "T1003"],
+     "tags": ["mimikatz", "credential-dumping", "T1003", "auto-response"],
      "status": "Open"
    }
    ```
 
-4. **Output**: Extract case ID from response for reference in email notifications
+4. **Output**: Extract case ID from response for reference in notifications
 
-**Verification**: Check TheHive dashboard to confirm case created with correct title, severity, and tags from Shuffle workflow execution.
+**Verification**: Check TheHive dashboard to confirm case created with INCIDENT prefix and auto-response tag.
 
 ![SOC Workflow Data Flow](screenshots/thehive_alerts.png)
 
 ---
 
-#### Node 8: TheHive – Create Alert/Case (Incident Case Creation)
+#### Node 8: TheHive – Create Alert (Low/Medium/High Severity)
 
-**Purpose**: Generate analyst-readable incident case with full context (all branches)
+**Purpose**: Generate analyst alert in TheHive for lower severity threats requiring manual investigation
+
+**Trigger**: Executes when severity is **Low, Medium, or High** (NOT Critical)
 
 **Shuffle Configuration**:
 
-1. Create TheHive authentication
-2. URL: `http://YOUR_THEHIVE_IP:9000`
-3. API key: From service account
+1. Add **HTTP** node to workflow
+2. Configure authentication and endpoint:
 
-**Alert Fields** (Low/Medium/High severity):
+   - **URL**: `http://YOUR_THEHIVE_IP:9000/api/v1/alert`
+   - **Method**: POST
+   - **Headers**:
+     ```
+     Authorization: Bearer YOUR_THEHIVE_API_KEY
+     Content-Type: application/json
+     ```
 
-- Title: `Suspicious Activity: {process_name}`
-- Severity: `$normalized-severity`
-- TLP: 2 (Amber)
-- Tags: `MITRE-ATT&CK`, `Malware`, `Detection`
-- Description: Includes hash (if available), command line, host
+3. **Request Body**:
 
-**Case Creation** (Critical severity - automated response):
+   ```json
+   {
+     "title": "Suspicious Activity: $process_name on $hostname",
+     "description": "Process: $process_name\nHash: $sha256_hash\nCommand: $command_line\nVirusTotal Score: $vt_detection_count/70\n\nStatus: Alert created for analyst review. No automated response triggered.",
+     "severity": "$normalized-severity",
+     "tlp": 2,
+     "tags": ["mimikatz", "credential-dumping", "T1003", "analyst-review"],
+     "status": "New"
+   }
+   ```
 
-- Title: `INCIDENT: {hostname} - {threat_name}`
-- Description: Full event details + **"Automated response authorized and executed"**
-- Related observables: File hash, IP, hostname
-- Status: Open (for post-response investigation)
-- Tags: `AutoResponse`, `Critical`, MITRE technique
+4. **Output**: Extract alert ID from response for analyst tracking
+
+**Verification**: Review the output of the TheHive node in Shuffle to confirm the alert was successfully created with the analyst-review tag and the correct severity level.
 
 ![SOC Workflow Data Flow](screenshots/thehive-test.png)
 
