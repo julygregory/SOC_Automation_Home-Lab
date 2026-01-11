@@ -95,7 +95,7 @@ I'm not going to repeat installation guides here—the official documentation is
 
 ### Verification Steps (Check If Setup Works)
 
-#### ✅ Windows VM - Verify Sysmon & Wazuh Agent
+#### Windows VM - Verify Sysmon & Wazuh Agent
 
 ```powershell
 # Check Sysmon is running
@@ -107,7 +107,7 @@ Get-Service WazuhSvc
 # Should show: Running
 ```
 
-#### ✅ Wazuh VM - Verify Manager is Active
+#### Wazuh VM - Verify Manager is Active
 
 ```bash
 # Check if Wazuh manager is running
@@ -118,7 +118,7 @@ sudo systemctl status wazuh-manager
 sudo netstat -tulpn | grep 1514
 ```
 
-#### ✅ Shuffle - Verify Docker Containers
+#### Shuffle - Verify Docker Containers
 
 ```bash
 # Check if Shuffle and Elasticsearch are running
@@ -130,7 +130,7 @@ docker ps
 # Login: admin / admin
 ```
 
-#### ✅ TheHive - Verify Web Interface
+#### TheHive - Verify Web Interface
 
 ```bash
 # Check if TheHive is running
