@@ -5,80 +5,88 @@
 
 ---
 
-## 📋 Project Overview
+## Project Overview
 
-I built this home lab to understand how security operations work in practice. I integrated Wazuh (SIEM), Shuffle (SOAR), and TheHive (case management) to learn how alerts are detected, enriched with threat intelligence, and responded to automatically. This project helped me understand the workflow from endpoint detection to automated response and case management.
+I built this home lab because I wanted to understand how real SOC teams detect and respond to threats. Instead of just reading about SIEM and SOAR tools, I decided to set up a working environment where I could see the entire process: detection, analysis, automation, and incident management.
 
-**What I Learned:**
+My goal was simple: take a real threat (Mimikatz), see how each tool detects it, and build an automated response without any manual steps. This project taught me what it takes to build a complete security operations workflow.
 
-- How to integrate SIEM, SOAR, and case management platforms together
-- How to create detection rules that catch real suspicious activity (like Mimikatz)
-- How to build automated workflows that enrich alerts and create cases
-- How Windows telemetry (Sysmon) works and why log aggregation matters
-- How to automate security responses without needing manual intervention
+**What I Understand Now:**
+
+- How SIEM, SOAR, and case management systems work together in practice
+- Why detection rules matter and how to write them for real threats
+- How automation can speed up response time without sacrificing accuracy
+- How Windows logging (through Sysmon) feeds into detection pipelines
+- Why analyst oversight is crucial even in automated environments
 
 ---
 
-## 🏗️ Architecture & Visual Layout
+## Architecture Overview
 
-### System Design
+### System Layout
 
 ![SOC Workflow Data Flow](screenshots/soc-workflow.png)
 
-**Why I Designed It This Way**
+**Why I Built It This Way**
 
-- I put Wazuh and Shuffle together on one VM to reduce delays in my workflows
-- I separated TheHive to keep case management from slowing down my detection pipeline
-- I used Windows as the target endpoint because that's what I'll encounter in real jobs
-- I used Bridged network so I could easily access all services from my computer while testing
+I had to make some practical decisions about how to organize three VMs. Here's my thinking:
 
----
-
-## 🛠️ Technology Stack & Why I Use Them
-
-| Tool            | Purpose                | Why I Chose It                                                         |
-| :-------------- | :--------------------- | :--------------------------------------------------------------------- |
-| **Wazuh**       | SIEM (Detection)       | Free and open-source; good for learning how SIEMs analyze logs         |
-| **Shuffle**     | SOAR (Automation)      | Visual interface meant I could build workflows without coding          |
-| **TheHive**     | Case Management        | Simple way to track incidents and understand analyst workflows         |
-| **Sysmon**      | Windows Telemetry      | Gives detailed process logs that Windows Event Viewer doesn't show     |
-| **VirusTotal**  | Threat Intelligence    | Free API to check file reputation; helps me understand threat scoring  |
-| **Wazuh Agent** | Endpoint Communication | Agent on Windows sends logs to Wazuh and can execute response commands |
+- **Wazuh + Shuffle on same VM**: I wanted fast automation—no network delays when an alert comes in
+- **TheHive separate**: Case management shouldn't slow down my detection and response pipeline
+- **Windows as target**: This is what I'll encounter at work, so it makes sense to practice with it
+- **Bridged network**: I needed all services accessible from my main computer for easy testing and troubleshooting
 
 ---
 
-## 🖥️ Virtual Machine Setup
+## Technology Stack
 
-### Hardware Specifications
+I didn't pick these tools randomly. Each one solves a specific problem I had:
 
-| VM       | OS                         | CPU     | RAM  | Storage | Purpose                                   |
+| Tool            | What It Does           | Why I'm Using It                                                         |
+| :-------------- | :--------------------- | :----------------------------------------------------------------------- |
+| **Wazuh**       | Detects threats        | It's free, open-source, and I can see exactly how it analyzes logs       |
+| **Shuffle**     | Automates responses    | No coding required—I can drag-and-drop a complete workflow visually      |
+| **TheHive**     | Tracks incidents       | I need somewhere to organize cases and maintain context during incidents |
+| **Sysmon**      | Logs process activity  | Windows doesn't give me detailed process logs by default; Sysmon does    |
+| **VirusTotal**  | Checks file reputation | Free API to understand if a file is actually malicious before I respond  |
+| **Wazuh Agent** | Collects & responds    | Sends logs to Wazuh and executes response commands on the endpoint       |
+
+---
+
+## Virtual Machine Setup
+
+### Hardware Allocation
+
+I sized these VMs based on what each needs to do:
+
+| VM       | OS                         | CPU     | RAM  | Storage | Role                                      |
 | :------- | :------------------------- | :------ | :--- | :------ | :---------------------------------------- |
-| **VM 1** | Windows 10 Enterprise LTSC | 2 cores | 8 GB | 50 GB   | Target endpoint with Sysmon + Wazuh Agent |
-| **VM 2** | Ubuntu 24.04 LTS           | 4 cores | 8 GB | 50 GB   | Wazuh Manager + Shuffle (SOAR) in Docker  |
-| **VM 3** | Ubuntu 24.04 LTS           | 4 cores | 8 GB | 50 GB   | TheHive + Elasticsearch + Cassandra       |
+| **VM 1** | Windows 10 Enterprise LTSC | 2 cores | 8 GB | 50 GB   | Target endpoint (Sysmon + Wazuh Agent)    |
+| **VM 2** | Ubuntu 24.04 LTS           | 4 cores | 8 GB | 50 GB   | Detection center (Wazuh + Shuffle Docker) |
+| **VM 3** | Ubuntu 24.04 LTS           | 4 cores | 8 GB | 50 GB   | Case tracking (TheHive + Databases)       |
 
-### Resource Reasoning
+### Resource Decisions
 
-- **Windows: 2 CPUs** - Mainly sends logs; doesn't need heavy processing
-- **Ubuntu VMs: 4 CPUs each** - Run multiple services (databases, indexing, containers)
-- **8 GB RAM each** - Balanced for smooth operation without production overhead
-- **50 GB storage each** - Enough for OS, logs, and test data
+- **Windows gets 2 CPUs**: It mostly just sends logs—doesn't need heavy processing
+- **Ubuntu VMs get 4 CPUs each**: They run multiple services and databases that need computing power
+- **8 GB RAM across the board**: Enough to run everything smoothly without wasting resources
+- **50 GB storage each**: Plenty for operating systems, log storage, and test data
 
-### Network Configuration
+### Network Setup
 
-All VMs use **Bridged Adapter** connected to your home router:
+I connected all VMs with **Bridged Adapter** to my home router:
 
-- Each VM gets an IP from your router's DHCP
-- VMs can communicate with each other and your main computer
-- Find actual IPs: Use `ipconfig` (Windows) or `ip addr` (Linux) on each VM
+- Each VM gets a real IP from my router's DHCP server
+- VMs can talk to each other and to my main computer
+- To find each VM's IP: use `ipconfig` on Windows or `ip addr` on Linux
 
 ---
 
-## 🔧 Installation & Setup (Quick Reference)
+## Getting Started
 
-### Installation Strategy
+### Installing the Tools
 
-Instead of me documenting every installation step here, I'll point you to the **official guides** for each tool. I learned from the official docs and I recommend you do the same:
+I'm not going to repeat installation guides here—the official documentation is more up-to-date and thorough. Instead, I'll point you to where I learned:
 
 - **Wazuh:** https://documentation.wazuh.com/current/installation-guide/index.html
 - **Shuffle:** https://github.com/frikky/shuffle/blob/master/README.md
@@ -136,41 +144,44 @@ sudo systemctl status thehive
 
 ---
 
-## 🧪 Real-World Test: Detecting Mimikatz
+## Testing Detection in Action
 
-### Scenario Overview
+### My Test: Mimikatz Detection
 
-We'll run Mimikatz (a legitimate but suspicious Windows tool) and watch Wazuh detect it. This shows how the lab works in practice.
+I wanted to test my entire setup with a real tool that SOC teams actually deal with. Mimikatz is popular with attackers because it extracts credentials from memory. By testing with it, I can see the whole workflow:
+
+Detection → Analysis → Enrichment → Response → Investigation
+
+Here's how I tested it:
 
 ### Step 1: Initial Setup on Windows VM
 
-1. **Disable Windows security features** (lab only - not for production):
+1. **Disable Windows Defender** (this is just for my lab environment):
 
    ```powershell
-   # Disable Real-Time Protection
+   # Disable Real-Time Protection so it doesn't interfere with testing
    Set-MpPreference -DisableRealtimeMonitoring $true
 
    # Disable Cloud-Delivered Protection
    Set-MpPreference -DisableCloudProtection $true
    ```
 
-2. **Download Mimikatz** (a password dumping tool):
+2. **Get Mimikatz** (the tool I'm testing with):
    - Download from: https://github.com/gentilkiwi/mimikatz/releases
    - Save to: `C:\Tools\mimikatz.exe`
 
-### Step 2: Run Mimikatz (First Time)
+### Step 2: Run Mimikatz (Initial Test)
 
-Open PowerShell and run:
+From the Windows VM, I run Mimikatz to trigger it:
 
 ```powershell
 C:\Tools\mimikatz.exe
 ```
 
-### Step 3: Check Wazuh Manager for Alerts
+### Step 3: Check Wazuh for Alerts (Before Configuration)
 
-1. Open Wazuh Manager: `http://YOUR_WAZUH_VM_IP`
-2. Go to **Discover** section
-3. **Problem:** Wazuh won't detect Mimikatz yet
+1. Go to Wazuh → **Discover** section
+2. **Nothing shows up** - That's expected. Without a detection rule, Wazuh has no way to know Mimikatz is suspicious.
    - Why? The default rules don't know about Mimikatz
    - We need to configure Wazuh to look for it
 
@@ -279,7 +290,7 @@ sudo systemctl restart wazuh-manager
 
 ![SOC Workflow Data Flow](screenshots/wazuh_mimikatz-detected.png)
 
-## 🔄 Shuffle Workflow: Building Automation
+## Building Automation Workflows
 
 ### Architecture Overview
 
@@ -337,11 +348,11 @@ sudo systemctl restart wazuh-manager
 
 ---
 
-### Workflow Nodes (Step-by-Step Configuration)
+# Workflow Nodes (Step-by-Step Configuration)
 
-#### Node 1: Shuffle Webhook (Ingestion)
+#### Node 1: Shuffle Webhook (Alert Reception)
 
-**Purpose**: Receive alerts from Wazuh and start automation
+**Purpose**: Receive suspicious activity alerts from Wazuh and initiate workflow
 
 **Steps**:
 
@@ -385,23 +396,39 @@ Once configured, when you execute Mimikatz again, Wazuh will automatically send 
 
 ---
 
-#### Node 2: Regex Capture Group (Hash Extraction)
+#### Node 2: Regex Capture Group (Artifact Extraction)
 
-**Purpose**: Extract SHA256 hash from Wazuh logs
+**Purpose**: Extract SHA256 hash from process telemetry - **Artifact Validation (Guardrail #1) Entry Point**
 
 **Configuration**:
 
 - **Input field**: `$exec.all_fields.full_log.win.eventdata.hashes`
 - **Regex pattern**: `SHA256=([0-9A-Fa-f]{64})`
-- **Output**: Captured SHA256 hash for enrichment
+- **Output**: Captured SHA256 hash for enrichment (or null if not found)
+
+**Why This Matters**: This node is the first guardrail. If no hash is found (fileless malware, encoded PowerShell), the workflow bypasses threat intelligence and goes directly to analyst review.
 
 ![SOC Workflow Data Flow](screenshots/shuffle_SHA256.png)
 
 ---
 
-#### Node 3: VirusTotal – Get Hash Report
+#### Conditional Branch - Artifact Validation (Guardrail #1)
 
-**Purpose**: Threat intelligence enrichment via VirusTotal
+**Purpose**: Decision point - does a valid hash exist?
+
+**Configuration**:
+
+- **Condition**: `if $sha256-hash exists and length > 0`
+- **True Branch**: Continue to VirusTotal enrichment (high-confidence path)
+- **False Branch**: Skip enrichment → TheHive alert only (analyst review path)
+
+**Security Rationale**: Hash-less detections (fileless attacks, PowerShell encoding) cannot be auto-remediated with confidence. These are escalated to analyst triage.
+
+---
+
+#### Node 3: VirusTotal – Get Hash Report (Threat Intelligence Enrichment)
+
+**Purpose**: Threat intelligence enrichment via VirusTotal (True branch only)
 
 **Setup**:
 
@@ -413,15 +440,15 @@ Once configured, when you execute Mimikatz again, Wazuh will automatically send 
 **Node Configuration**:
 
 - **Hash field (dynamic)**: `$sha256-hash` (from Regex node)
-- **Output**: Detection statistics and vendor consensus
+- **Output**: Detection statistics and vendor consensus (malicious count, legitimate count, undetected count)
 
 ![SOC Workflow Data Flow](screenshots/shuffle_virustotal.png)
 
 ---
 
-#### Node 4: Python Code – Severity Normalization
+#### Node 4: Python Code – Policy-Based Severity Assessment (Control Layer)
 
-**Purpose**: Convert VirusTotal results into SOC severity levels
+**Purpose**: Normalize VirusTotal results into SOC severity levels - **Response Authorization Gate**
 
 **Script**:
 
@@ -440,15 +467,30 @@ else:
 print(severity)
 ```
 
-**Output**: Normalized severity for branching logic
+**Why This Matters**: This is a **control layer**. The severity score directly determines whether automated response is authorized. Only Critical severity permits auto-remediation.
+
+**Output**: Normalized severity for response authorization decision
 
 ![SOC Workflow Data Flow](screenshots/shuffle_python.png)
 
 ---
 
-#### Node 5: HTTP/Curl – Wazuh API Token
+#### Response Authorization Decision (Guardrail #2)
 
-**Purpose**: Retrieve valid Wazuh API token for response actions
+**Purpose**: Policy gate - is automated response authorized?
+
+**Configuration**:
+
+- **If Severity == "Critical"**: Proceed to active response path (authorized)
+- **If Severity == "High" / "Medium" / "Low"**: Proceed to alert-only path (analyst review)
+
+**Security Rationale**: Only threats with high VirusTotal consensus trigger automatic remediation. Lower-severity findings receive analyst oversight before any action.
+
+---
+
+#### Node 5: HTTP/Curl – Wazuh API Token (Critical Branch Only)
+
+**Purpose**: Retrieve short-lived Wazuh API token for active response execution (Critical branch only)
 
 **Configuration**:
 
@@ -457,13 +499,15 @@ print(severity)
 - **Body**: Username and password from `wazuh-passwords.txt`
 - **Output**: Bearer token for Wazuh API calls
 
+**Execution Gate**: This node only executes if Response Authorization Decision == Critical.
+
 ![SOC Workflow Data Flow](screenshots/shuffle_Get-API.png)
 
 ---
 
-#### Node 6: Wazuh Response Node (Process Termination)
+#### Node 6: Wazuh Active Response (Process Termination - Critical Branch Only)
 
-**Purpose**: Kill malicious processes via Wazuh Active Response
+**Purpose**: Execute authorized response - terminate malicious process (Critical branch only)
 
 **Configuration Steps**:
 
@@ -532,41 +576,13 @@ In your Shuffle workflow, add a **Wazuh** node configured as:
 - **Command name**: `win_kill_process0` _(matches the Wazuh response name)_
 - **Agent ID**: `001` (or your Windows agent ID)
 
-This ensures Shuffle triggers the exact active response command defined in Wazuh.
+**Audit Note**: This node only executes if both Guardrail #1 (hash exists) AND Guardrail #2 (Critical severity) are satisfied.
 
 ---
 
-#### Node 7: TheHive – Create Alert/Case
+#### Node 7: [HTTP] Create Case in TheHive
 
-**Purpose**: Generate analyst-readable alerts and cases
-
-**Shuffle Configuration**:
-
-1. Create TheHive authentication
-2. URL: `http://YOUR_THEHIVE_IP:9000`
-3. API key: From service account
-
-**Alert Fields**:
-
-- Title: `Suspicious Activity: {process_name}`
-- Severity: `$normalized-severity`
-- TLP: 2 (Amber)
-- Tags: `MITRE-ATT&CK`, `Malware`, `Detection`
-- Description: Includes hash, command line, host
-
-**Case Creation** (for Critical severity):
-
-- Title: `INCIDENT: {hostname} - {threat_name}`
-- Description: Full event details
-- Related observables: File hash, IP, hostname
-
-![SOC Workflow Data Flow](screenshots/thehive-test.png)
-
----
-
-#### Node 8: HTTP node create_thehive-case/POST
-
-**Purpose**: Create or update case in TheHive for tracking and investigation
+**Purpose**: Create or update case in TheHive for tracking and investigation via API
 
 **Shuffle Configuration**:
 
@@ -602,33 +618,73 @@ This ensures Shuffle triggers the exact active response command defined in Wazuh
 
 ---
 
-#### Node 9: Email Notification
+#### Node 8: TheHive – Create Alert/Case (Incident Case Creation)
 
-**Purpose**: Notify analysts of critical activity
+**Purpose**: Generate analyst-readable incident case with full context (all branches)
+
+**Shuffle Configuration**:
+
+1. Create TheHive authentication
+2. URL: `http://YOUR_THEHIVE_IP:9000`
+3. API key: From service account
+
+**Alert Fields** (Low/Medium/High severity):
+
+- Title: `Suspicious Activity: {process_name}`
+- Severity: `$normalized-severity`
+- TLP: 2 (Amber)
+- Tags: `MITRE-ATT&CK`, `Malware`, `Detection`
+- Description: Includes hash (if available), command line, host
+
+**Case Creation** (Critical severity - automated response):
+
+- Title: `INCIDENT: {hostname} - {threat_name}`
+- Description: Full event details + **"Automated response authorized and executed"**
+- Related observables: File hash, IP, hostname
+- Status: Open (for post-response investigation)
+- Tags: `AutoResponse`, `Critical`, MITRE technique
+
+![SOC Workflow Data Flow](screenshots/thehive-test.png)
+
+---
+
+#### Node 9: Email Notification (Analyst Notification)
+
+**Purpose**: Alert analyst of detected activity and action taken
 
 **Configuration**:
 
 - **Recipient**: Analyst email address
 - **Subject**: `[ALERT] {severity} - {threat_name} on {hostname}`
+  - For Critical with auto-response: `[CRITICAL + AUTOMATED RESPONSE] {threat_name} on {hostname}`
 - **Body**:
+
   ```
   Threat Name: {threat_name}
   Hostname: {hostname}
   Severity: {severity}
   VirusTotal Score: {vt-detection-count}/70
-  Action Taken: {response-action}
+
+  Automation Status: {response-action}
+  (e.g., "Automatic response AUTHORIZED - Process terminated")
+
   TheHive Case: {case-link}
+  Analyst Review Required: [Yes/No based on severity]
   ```
 
 **Verification**:
 
-Once the workflow completes, you should receive an email notification at your configured analyst email address within 1-2 seconds. The email will contain all relevant alert details and a link to the newly created TheHive case for further investigation.
+Once the workflow completes, you should receive an email notification within 1-2 seconds. The email clearly indicates:
+
+- Whether automatic response was executed
+- The authorization policy that was applied
+- Links to the detailed case for post-incident investigation
 
 ![SOC Workflow Data Flow](screenshots/sent-email.png)
 
 ---
 
-## ✅ Automated Response in Action: Mimikatz Process Termination
+## Automated Response in Action
 
 ### Real-Time Process Kill Verification
 
@@ -654,29 +710,66 @@ This demonstrates a complete automated incident response cycle without manual an
 
 ### Final Workflow Logic
 
-The automated response workflow follows this decision tree:
+The automated response workflow follows a **policy-driven decision tree** designed to balance detection accuracy, analyst oversight, and automated containment.
 
-1. **Alert Reception**: Wazuh webhook sends detected Mimikatz alert to Shuffle
-2. **Hash Extraction**: Regex node extracts SHA256 hash from process telemetry
-3. **Branching Logic (Hash Validation)**:
-   - **If Hash Found (True)**: Proceeds to threat intelligence enrichment
-   - **If No Hash (False)**: Skips to TheHive alert creation for analyst review
-4. **Threat Intelligence** (Hash Found Branch): VirusTotal API enriches hash with detection counts and vendor consensus
-5. **Severity Assessment**: Python script normalizes VirusTotal results into SOC severity levels (Critical/High/Medium/Low)
-6. **Response Decision**:
-   - **If Critical**: Executes full response (process kill + case + email)
-   - **If High/Medium/Low**: Creates TheHive alert for analyst review without auto-termination
-7. **Active Response** (Critical Branch): Obtains Wazuh API token and triggers process termination command
-8. **Case Management**: Creates detailed case in TheHive with observables, severity, and MITRE ATT&CK tags
-9. **Notification**: Sends email alert to analyst with case link and threat details
+1. **Alert Reception**
+   Wazuh detects suspicious activity (e.g., Mimikatz or encoded PowerShell) and forwards the alert to Shuffle via webhook.
 
-This multi-stage approach ensures that only high-confidence threats with file hashes trigger automatic response, while hash-less detections and lower-severity findings are logged for analyst triage.
+2. **Artifact Extraction**
+   A regex node attempts to extract a SHA256 hash from the process telemetry.
+
+3. **Artifact Validation (Guardrail #1)**
+
+   - **If a valid hash exists**: The workflow proceeds to threat intelligence enrichment.
+   - **If no hash exists** (e.g., fileless or encoded PowerShell): The workflow bypasses enrichment and creates a TheHive alert for analyst review, preventing blind automation.
+
+4. **Threat Intelligence Enrichment**
+   VirusTotal enriches the extracted hash with detection ratios and vendor consensus.
+
+5. **Policy-Based Severity Assessment (Control Layer)**
+   A Python node normalizes VirusTotal results into SOC severity levels (Low / Medium / High / Critical).
+   This node also functions as a **response authorization gate**, determining whether automated remediation is permitted.
+
+6. **Response Authorization Decision (Guardrail #2)**
+
+   - **Low / Medium / High**:
+     - No automated containment
+     - TheHive alert is created for analyst triage
+   - **Critical**:
+     - Automation is authorized due to high confidence and impact
+
+7. **Active Response Execution (Critical Only)**
+   Shuffle retrieves a short-lived Wazuh API token and instructs the Wazuh manager to execute an active response, terminating the malicious process on the endpoint.
+
+8. **Analyst Notification**
+   A high-priority email notification is sent to the analyst, indicating automated containment has occurred.
+
+9. **Incident Case Creation**
+   A detailed TheHive case is created via HTTP POST, including:
+
+   - Observables (hash, host, process)
+   - Severity
+   - Automated actions taken
+   - MITRE ATT&CK techniques
+
+---
+
+### Why This Approach Matters
+
+**Policy-Driven Automation**: This workflow is not just reactive (detect → kill). Instead, it implements **authorization gates** (guardrails) that ensure:
+
+- Only high-confidence threats trigger automatic response
+- Fileless/hash-less attacks are flagged for analyst review (not blindly automated)
+- Severity assessment acts as a control layer, not just a classification
+- Every automated action is logged and auditable
+
+This distinction demonstrates mature SOC engineering and is what security teams and interviewers look for in automation projects.
 
 ![SOC Workflow Data Flow](screenshots/final_workflow.png)
 
 ---
 
-## 📊 Understanding the Alert Flow
+## How the Workflow Processes Alerts
 
 ### What Happens When Mimikatz Runs:
 
@@ -703,7 +796,7 @@ This multi-stage approach ensures that only high-confidence threats with file ha
 
 ---
 
-## 💡 Tips & Troubleshooting
+## Troubleshooting Common Issues
 
 ### Common Issues
 
@@ -745,17 +838,7 @@ ping YOUR_OTHER_VM_IP
 
 ---
 
-## 📚 Next Steps for My Learning
-
-1. **Create more detection rules:** I want to add rules for other suspicious activities beyond Mimikatz
-2. **Test different tools:** I plan to test PsExec, PowerUp, and other security tools
-3. **Expand my workflows:** I want to add more Shuffle actions like email alerts and ticketing
-4. **Simulate a network:** I'd like to add more VMs to see how detection works at scale
-5. **Get better with TheHive:** I want to use MITRE ATT&CK mappings more effectively in my cases
-
----
-
-## 🔗 Official Documentation Links
+## Resources I Used
 
 - **Wazuh Rules:** https://documentation.wazuh.com/current/user-manual/ruleset/index.html
 - **Shuffle Documentation:** https://github.com/frikky/shuffle
