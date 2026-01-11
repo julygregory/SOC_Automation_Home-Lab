@@ -257,7 +257,7 @@ sudo systemctl restart filebeat
 ![SOC Workflow Data Flow](screenshots/wazuh_create-index-pattern.png)
 ![SOC Workflow Data Flow](screenshots/wazuh_use-new-index.png)
 
-#### 4d. Create Detection Rule for Mimikatz
+#### 4d. Add Detection Rule for Mimikatz
 
 ```bash
 sudo nano /var/ossec/etc/rules/local_rules.xml
@@ -266,10 +266,13 @@ sudo nano /var/ossec/etc/rules/local_rules.xml
 Add this rule:
 
 ```xml
-<rule id="100002" level="7">
-  <description>Mimikatz execution detected</description>
-  <match>mimikatz</match>
-  <field name="Image">mimikatz</field>
+<rule id="100002" level="15">
+   <if_group>sysmon_event1</if_group>
+   <field name="win.eventdata.originalFileName" type="pcre2">(?i)mimikatz\.exe</field>
+   <description>Mimikatz Usage Detected</description>
+   <mitre>
+      <id>T1003</id>
+   </mitre>
 </rule>
 ```
 
