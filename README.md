@@ -25,7 +25,7 @@ My goal was simple: take a real threat (Mimikatz), see how each tool detects it,
 
 ### System Layout
 
-![SOC Workflow Data Flow](screenshots/soc-workflow.png)
+![SOC Workflow Data Flow](screenshots/final_workflow-1.png)
 
 **Why I Built It This Way**
 
@@ -311,7 +311,6 @@ sudo systemctl restart wazuh-manager
 ### Setup Prerequisites
 
 1. **Shuffle Hybrid Setup**:
-
    - Create account on **shuffle.io**
    - Sign in to the Shuffle Manager at shuffle.io
    - Install **Docker** on your local machine (where you want apps to run)
@@ -593,7 +592,6 @@ In your Shuffle workflow, add a **Wazuh** node configured as:
 
 1. Add **HTTP** node to workflow
 2. Configure authentication and endpoint:
-
    - **URL**: `http://YOUR_THEHIVE_IP:9000/api/v1/case`
    - **Method**: POST
    - **Headers**:
@@ -633,7 +631,6 @@ In your Shuffle workflow, add a **Wazuh** node configured as:
 
 1. Add **HTTP** node to workflow
 2. Configure authentication and endpoint:
-
    - **URL**: `http://YOUR_THEHIVE_IP:9000/api/v1/alert`
    - **Method**: POST
    - **Headers**:
@@ -734,7 +731,6 @@ The automated response workflow follows a **policy-driven decision tree** design
    A regex node attempts to extract a SHA256 hash from the process telemetry.
 
 3. **Artifact Validation (Guardrail #1)**
-
    - **If a valid hash exists**: The workflow proceeds to threat intelligence enrichment.
    - **If no hash exists** (e.g., fileless or encoded PowerShell): The workflow bypasses enrichment and creates a TheHive alert for analyst review, preventing blind automation.
 
@@ -746,7 +742,6 @@ The automated response workflow follows a **policy-driven decision tree** design
    This node also functions as a **response authorization gate**, determining whether automated remediation is permitted.
 
 6. **Response Authorization Decision (Guardrail #2)**
-
    - **Low / Medium / High**:
      - No automated containment
      - TheHive alert is created for analyst triage
@@ -761,7 +756,6 @@ The automated response workflow follows a **policy-driven decision tree** design
 
 9. **Incident Case Creation**
    A detailed TheHive case is created via HTTP POST, including:
-
    - Observables (hash, host, process)
    - Severity
    - Automated actions taken
